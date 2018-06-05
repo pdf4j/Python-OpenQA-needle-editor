@@ -450,7 +450,7 @@ class fileHandler:
     def writeFile(self, jsonfile):
         """Take the data variable and write is out as a json file."""
         with open(jsonfile, "w") as outFile:
-            json.dump(self.jsonData, outFile)
+            json.dump(self.jsonData, outFile, indent=2)
         messagebox.showinfo("Info", "The needle has been written out.")
 
     def provideData(self):
