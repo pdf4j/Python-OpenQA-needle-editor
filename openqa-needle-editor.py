@@ -34,21 +34,24 @@ class Application:
 
         self.openDirButton = tk.Button(self.buttonFrame, text="Select image directory", width=15, command=self.readimages)
         self.openDirButton.grid(row=0, column=0, sticky="nesw")
+        
+        self.openFileButton = tk.Button(self.buttonFrame, text="Select image file", width=15, command=self.selectfile)
+        self.openFileButton.grid(row=1, column=0, sticky="nesw")
 
         self.quitButton = tk.Button(self.buttonFrame, text="Quit", fg="red", command=self.frame.quit)
         self.quitButton.grid(row=12, column=0, sticky="nesw")
         
         self.nextButton = tk.Button(self.buttonFrame, text="Next image (n)", command=lambda: self.nextImage(None))
-        self.nextButton.grid(row=1,  column=0, sticky="nesw")
+        self.nextButton.grid(row=2,  column=0, sticky="nesw")
         
         self.prevButton = tk.Button(self.buttonFrame, text="Previous image (p)", command=lambda: self.prevImage(None))
-        self.prevButton.grid(row=2,  column=0, sticky="nesw")
+        self.prevButton.grid(row=3,  column=0, sticky="nesw")
         
         self.createButton = tk.Button(self.buttonFrame, text="Show next area (s)", command=lambda: self.showArea(None))
-        self.createButton.grid(row=3,  column=0, sticky="nesw")
+        self.createButton.grid(row=4,  column=0, sticky="nesw")
         
         self.modifyButton = tk.Button(self.buttonFrame, text="Modify active area (m)", command=lambda: self.modifyArea(None))
-        self.modifyButton.grid(row=4, column=0, sticky="nesw")
+        self.modifyButton.grid(row=5, column=0, sticky="nesw")
         
         #self.hideButton = tk.Button(self.buttonFrame, text="Delete active area (d)", command=lambda: self.hideArea(None))
         #self.hideButton.grid(row=5, column=0, sticky="news")
@@ -200,6 +203,14 @@ class Application:
             self.displayImage(self.returnPath(self.imageName))
         except IndexError:
             pass
+
+    def selectfile(self):
+        """Reads in an image file."""
+        path = filedialog.askopenfile().name
+        self.directory = os.path.split(path)[0]
+        self.imageName = os.path.split(path)[1]
+        self.imageCount = 0
+        self.displayImage(path)
 
     def displayImage(self, path):
         """Display image on the canvas."""
