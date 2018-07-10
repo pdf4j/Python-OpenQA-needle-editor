@@ -205,7 +205,7 @@ class Application:
             pass
 
     def selectfile(self):
-        """Reads in an image file."""
+        """Reads in an image file and shows it for editing."""
         path = filedialog.askopenfile().name
         self.directory = os.path.split(path)[0]
         self.imageName = os.path.split(path)[1]
