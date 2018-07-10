@@ -17,10 +17,21 @@ The editor only supports **png** screenshots.
 
 ### Reading the images
 
-1. Click the **Select image directory**.
+#### Editing multiple files in a directory
+
+You can open a directory to navigate through images one after another and edit their needles. To use this approach:
+
+1. Click the **Select image directory** button.
 2. Use the dialogue to select a directory where the screenshots are located.
 
 **Note:** The editor reports number of images in the directory, when you have selected it.
+
+#### Editing a single file
+
+You can also open a particular file and edit its needle. To use this approach:
+
+1. Click the **Select image file** button.
+2. Use the dialogue to locate the file you want to edit.
 
 ### Navigating through images
 
