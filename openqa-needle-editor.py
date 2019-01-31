@@ -48,10 +48,10 @@ class Application:
         self.openDirButton = tk.Button(self.buttonFrame, text="Select image directory", width=15, command=self.readimages)
         self.openDirButton.grid(row=0, column=0, sticky="nesw")
         
-        self.openFileButton = tk.Button(self.buttonFrame, text="Select image file", width=15, command=self.selectfile)
+        self.openFileButton = tk.Button(self.buttonFrame, text="Select image file (o)", width=15, command=self.selectfile)
         self.openFileButton.grid(row=1, column=0, sticky="nesw")
 
-        self.quitButton = tk.Button(self.buttonFrame, text="Quit", fg="red", command=self.frame.quit)
+        self.quitButton = tk.Button(self.buttonFrame, text="Quit (q)", fg="red", command=self.frame.quit)
         self.quitButton.grid(row=12, column=0, sticky="nesw")
         
         self.nextButton = tk.Button(self.buttonFrame, text="Next image (n)", command=lambda: self.nextImage(None))
@@ -104,6 +104,8 @@ class Application:
         self.pictureField.bind("p", self.prevImage)
         self.pictureField.bind("l", self.loadNeedle)
         self.pictureField.bind("c", self.createNeedle)
+        self.pictureField.bind("o", self.wrapopen)
+        self.pictureField.bind("q", self.wrapquit)
        # self.pictureField.bind("c", self.saveNeedle)
         #self.pictureField.bind("m", lambda: self.modifyNeedle())
         
@@ -192,6 +194,12 @@ class Application:
         self.needleEntry.grid(row=13, column=0, sticky="w")
         
 
+    def wrapopen(self, event):
+        self.selectfile()
+
+    def wrapquit(self, event):
+        self.frame.quit()
+
     def returnPath(self, image):
         """Create a full path from working directory and image name."""
         return os.path.join(self.directory, image)
@@ -219,23 +227,28 @@ class Application:
 
     def selectfile(self):
         """Reads in an image file and shows it for editing."""
-        path = filedialog.askopenfile().name
-        self.directory = os.path.split(path)[0]
-        image = os.path.split(path)[1]
-        if 'json' in image:
-            prefix = image.split('.')[0]
-            image = prefix + '.png'
-        self.imageName = image
-        self.imageCount = 0
-        path = os.path.join(self.directory, image)
-        self.displayImage(path)
+        noimage = False
+        try:
+            path = filedialog.askopenfile().name
+        except AttributeError:
+            noimage = True
+        if noimage == False:
+            self.directory = os.path.split(path)[0]
+            image = os.path.split(path)[1]
+            if 'json' in image:
+                prefix = image.split('.')[0]
+                image = prefix + '.png'
+            self.imageName = image
+            self.imageCount = 0
+            path = os.path.join(self.directory, image)
+            self.displayImage(path)
+        else:
+            pass
 
     def displayImage(self, path):
         """Display image on the canvas."""
         print(path)
         self.picture = Image.open(path)
-        #width = self.picture.width
-        #height = self.picture.height
         self.picsize = (self.picture.width,self.picture.height)
         self.image = tk.PhotoImage(file=path)
         self.background = self.pictureField.create_image((1, 1), image=self.image, anchor='nw')
@@ -250,26 +263,43 @@ class Application:
         self.imageCount += 1
         try:
             self.imageName = self.images[self.imageCount]
+            noimage = False
         except IndexError:
-            self.imageName = self.images[0]
-            self.imageCount = 0
-        self.pictureField.delete(self.rectangle)
-        self.rectangle = None
-        self.displayImage(self.returnPath(self.imageName))
+            if len(self.images) != 0:
+                self.imageName = self.images[0]
+                self.imageCount = 0
+                noimage = False
+            else:
+                messagebox.showerror("Error", "No images are loaded. Select an image first.")
+                noimage = True
+        if noimage == False:
+            self.pictureField.delete(self.rectangle)
+            self.rectangle = None
+            self.displayImage(self.returnPath(self.imageName))
+        else:
+            pass
 
     def prevImage(self, arg):
         """Display previous image on the list."""
         self.imageCount -= 1
         try:
             self.imageName = self.images[self.imageCount]
+            noimage = False
         except IndexError:
-            self.imageName = self.images[-1]
-            self.imageCount = len(self.images)
-        self.pictureField.delete(self.rectangle)
-        self.rectangle = None
-        self.displayImage(self.returnPath(self.imageName))
+            if len(self.images) != 0:
+                self.imageName = self.images[-1]
+                self.imageCount = len(self.images)
+                noimage = False
+            else:
+                messagebox.showerror("Error", "No images are loaded. Select an image first.")
+                noimage = True
+        if noimage == False:
+            self.pictureField.delete(self.rectangle)
+            self.rectangle = None
+            self.displayImage(self.returnPath(self.imageName))
+        else:
+            pass
         
-    
     def getCoordinates(self):
         """Read coordinates from the coordinate windows."""
         xpos = int(self.axEntry.get())
