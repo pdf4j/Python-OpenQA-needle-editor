@@ -27,6 +27,18 @@ class Application:
         self.imageName = None # The name of the active image
         self.handler = None # The file reader and writer object
         self.imageCount = 0 # Counter for
+
+    def acceptCliChoice(self, path):
+        """Opens an image for editing when passed as a CLI argument upon starting the editor."""
+        self.directory = os.path.dirname(path)
+        image = os.path.basename(path)
+        if '.json' in image:
+            prefix = image.split('.')[0]
+            image = prefix + '.png'
+        self.imageName = image    
+        self.imageCount = 0
+        path = os.path.join(self.directory, self.imageName)
+        self.displayImage(path)
         
     def buildWidgets(self):
         """Construct GUI"""
@@ -562,7 +574,15 @@ class needleData:
 root = tk.Tk()
 root.title("Python Needle Editor for OpenQA (Version 0.99)")
 
+try:
+    path = sys.argv[1]
+except IndexError:
+    path = None
+    
 app = Application(root)
+
+if path != None:
+    app.acceptCliChoice(path)
 
 root.mainloop()
 root.destroy() # optional; see description below
