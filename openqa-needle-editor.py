@@ -27,6 +27,7 @@ class Application:
         self.imageName = None # The name of the active image
         self.handler = None # The file reader and writer object
         self.imageCount = 0 # Counter for
+        self.rectangles = [] # Holder for rectangles
 
     def acceptCliChoice(self, path):
         """Opens an image for editing when passed as a CLI argument upon starting the editor."""
@@ -194,7 +195,7 @@ class Application:
         self.needleEntry.grid(row=13, column=0, sticky="w")
         
 
-    def wrapopen(self, event):
+    def wrapopen(self, event): # These functions serve as wrappers for key bindings that were not able to invoke 
         self.selectfile()
 
     def wrapquit(self, event):
@@ -302,10 +303,15 @@ class Application:
         
     def getCoordinates(self):
         """Read coordinates from the coordinate windows."""
-        xpos = int(self.axEntry.get())
-        ypos = int(self.ayEntry.get())
-        apos = int(self.bxEntry.get())
-        bpos = int(self.byEntry.get())
+        xpos = None
+        apos = None
+        try:
+            xpos = int(self.axEntry.get())
+            ypos = int(self.ayEntry.get())
+            apos = int(self.bxEntry.get())
+            bpos = int(self.byEntry.get())
+        except ValueError:
+            messagebox.showerror("Error", "Cannot operate without images.")
 
         if not xpos and not apos:
             self.needleCoordinates = [0, 0, 100, 200]
@@ -326,11 +332,13 @@ class Application:
             self.needleCoordinates = [self.area[0], self.area[1], self.area[2], self.area[3]]
             typ = self.area[4]
             self.rectangle = self.pictureField.create_rectangle(self.needleCoordinates, outline="red", width=2)
+            self.rectangles.append(self.rectangle)
             self.displayCoordinates(self.needleCoordinates)
             self.typeList.delete(0, "end")
             self.typeList.insert("end", typ)
         except TypeError:
-            pass
+            for r in self.rectangles:
+                self.pictureField.delete(r)
 
 
     def displayCoordinates(self, coordinates):
@@ -395,7 +403,6 @@ class Application:
         self.textJson.delete("1.0", "end")
         self.textJson.insert("end", json)
         self.pictureField.delete(self.rectangle)
-        self.rectangle = None
         self.showArea(None)
         
     def startArea(self, event):
