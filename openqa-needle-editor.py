@@ -209,8 +209,13 @@ class Application:
         """Reads in an image file and shows it for editing."""
         path = filedialog.askopenfile().name
         self.directory = os.path.split(path)[0]
-        self.imageName = os.path.split(path)[1]
+        image = os.path.split(path)[1]
+        if 'json' in image:
+            prefix = image.split('.')[0]
+            image = prefix + '.png'
+        self.imageName = image
         self.imageCount = 0
+        path = os.path.join(self.directory, image)
         self.displayImage(path)
 
     def displayImage(self, path):
