@@ -107,6 +107,10 @@ class Application:
         self.pictureField.bind("c", self.createNeedle)
         self.pictureField.bind("o", self.wrapopen)
         self.pictureField.bind("q", self.wrapquit)
+        self.pictureField.bind("<Up>", self.resizeArea)
+        self.pictureField.bind("<Down>", self.resizeArea)
+        self.pictureField.bind("<Left>", self.resizeArea)
+        self.pictureField.bind("<Right>", self.resizeArea)
        # self.pictureField.bind("c", self.saveNeedle)
         #self.pictureField.bind("m", lambda: self.modifyNeedle())
         
@@ -451,6 +455,47 @@ class Application:
             coordinates[2] = xpos
             coordinates[3] = bpos
         self.displayCoordinates(coordinates)
+
+    def resizeArea(self, event):
+        self.getCoordinates()
+
+        if event.state == 17:
+            x = 0
+            y = 1
+            step = 1
+        elif event.state == 21:
+            x = 0
+            y = 1
+            step = 5
+        elif event.state == 25:
+            x = 0
+            y = 1
+            step = 25
+        elif event.state == 24:
+            x = 2
+            y = 3
+            step = 25
+        elif event.state == 20:
+            x = 2
+            y = 3
+            step = 5
+        else:
+            x = 2
+            y = 3
+            step = 1
+        
+        if event.keycode == 113:
+            self.needleCoordinates[x] = self.needleCoordinates[x] - step
+        elif event.keycode == 114:
+            self.needleCoordinates[x] = self.needleCoordinates[x] + step
+        elif event.keycode == 111:
+            self.needleCoordinates[y] = self.needleCoordinates[y] - step
+        elif event.keycode == 116:
+            self.needleCoordinates[y] = self.needleCoordinates[y] + step
+        
+        self.displayCoordinates(self.needleCoordinates)
+        self.pictureField.coords(self.rectangle, self.needleCoordinates)
+        
 
         
     def loadNeedle(self, arg):
