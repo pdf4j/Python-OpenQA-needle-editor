@@ -7,10 +7,11 @@ Created on Fri May 18 08:46:48 2018
 """
 
 import tkinter as tk
-from PIL import Image
 import os
 import json
+import sys
 from tkinter import filedialog, messagebox
+from PIL import Image
 
 class Application:
     """ Hold the GUI frames and widgets, as well as the handling in the GUI. """
