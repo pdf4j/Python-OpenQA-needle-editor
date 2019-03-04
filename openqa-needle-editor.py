@@ -735,7 +735,7 @@ class needleData:
 #-----------------------------------------------------------------------------------------------
 
 root = tk.Tk()
-root.title("Python Needle Editor for OpenQA (Version 0.99)")
+root.title("Python Needle Editor for OpenQA (Version 2)")
 
 try:
     path = sys.argv[1]
