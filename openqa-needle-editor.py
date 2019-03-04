@@ -10,6 +10,7 @@ import tkinter as tk
 import os
 import json
 import sys
+import subprocess
 from tkinter import filedialog, messagebox
 from PIL import Image
 
@@ -119,6 +120,9 @@ class Application:
         
         self.jsonFrame = tk.Frame(self.frame)
         self.jsonFrame.grid(row=0, column=2, sticky="news")
+
+        self.screenshotFrame = tk.Frame(self.frame)
+        self.screenshotFrame.grid(row=1, column=2, sticky="news")
         
         self.nameLabel = tk.Label(self.jsonFrame, text="Filename:")
         self.nameLabel.grid(row=0, column=0, sticky="w")
@@ -183,20 +187,43 @@ class Application:
         self.textLabel = tk.Label(self.jsonFrame, text="Tags:")
         self.textLabel.grid(row=8, column=0, sticky="w")
         
-        self.textField = tk.Text(self.jsonFrame, width=50, height=15)
+        self.textField = tk.Text(self.jsonFrame, width=50, height=8)
         self.textField.grid(row=9, column=0, sticky="ew")
         
         self.jsonLabel = tk.Label(self.jsonFrame, text="Json Data:")
         self.jsonLabel.grid(row=10, column=0, sticky="w")
         
-        self.textJson = tk.Text(self.jsonFrame, width=50, height=15)
+        self.textJson = tk.Text(self.jsonFrame, width=50, height=8)
         self.textJson.grid(row=11, column=0, sticky="ew")
 
-        self.needleLable = tk.Label(self.jsonFrame, text="Areas in needle: ")
-        self.needleLable.grid(row=12, column=0, sticky="w")
+        self.needleLabel = tk.Label(self.jsonFrame, text="Areas in needle: ")
+        self.needleLabel.grid(row=12, column=0, sticky="w")
 
-        self.needleEntry = tk.Entry(self.jsonFrame, width=5)
+        self.needleEntry = tk.Entry(self.jsonFrame, width=50)
         self.needleEntry.grid(row=13, column=0, sticky="w")
+
+        self.scrNameLabel = tk.Label(self.screenshotFrame, text="VM domain: ")
+        self.scrNameLabel.grid(row=0, column=0, sticky="w")
+
+        self.scrName = tk.Listbox(self.screenshotFrame, width=30, height=2)
+        self.scrName.grid(row=0, column=1, sticky="we")
+        for i in ['Not available']:
+            self.scrName.insert("end", i)
+
+        self.vmButton = tk.Button(self.screenshotFrame, text='List domains', command=self.getVmDomains)
+        self.vmButton.grid(row=0, column=2, sticky="we")
+
+        self.shotNameLabel = tk.Label(self.screenshotFrame, text="Screenshot name: ")
+        self.shotNameLabel.grid(row=1, column=0, sticky="w")
+
+        self.shotName = tk.Entry(self.screenshotFrame, width=30)
+        self.shotName.grid(row=1, column=1, sticky="w")
+
+        self.takeButton = tk.Button(self.screenshotFrame, text='Take screenshot', command=self.takeScreenshot)
+        self.takeButton.grid(row=1, column=2, sticky="we")
+
+
+
         
 
     def wrapopen(self, event): # These functions serve as wrappers for key bindings that were not able to invoke 
@@ -537,6 +564,60 @@ class Application:
         self.handler.writeFile(path)
         self.pictureField.delete(self.rectangle)
         self.rectangle = None
+
+    def getVmDomains(self):
+        run = subprocess.run(['virsh', 'list'], capture_output=True)
+        domains = []
+        if run.returncode != 0:
+            messagebox.showerror("Error", run.stderr.decode('utf-8'))
+        else:
+            output = run.stdout.decode('utf-8').split('\n')
+            doms = output[2:]
+            for line in doms:
+                try:
+                    d = line.split('  ')[2].strip()
+                    domains.append(d)                    
+                except IndexError:
+                    break
+        self.scrName.delete(0, "end")
+        if len(domains) != 0:
+            for d in domains:
+                self.scrName.insert("end", d)
+        else:
+            messagebox.showerror("Error", "No active domains found!\n\nStart a VM or run the editor with sudo.")
+
+    def takeScreenshot(self):
+        selected = self.scrName.curselection()
+        try:
+            domain = self.scrName.get(selected[0])
+        except IndexError:
+            messagebox.showerror("Error", "No active domains found!\n\nStart a VM or run the editor with sudo.")
+        name = self.shotName.get()
+        scName =  name + '.ppm'
+        if not scName:
+            scName = "screenshot.ppm"
+        try:
+            shot = subprocess.run(['virsh', 'screenshot', domain, scName], capture_output=True)
+        except UnboundLocalError:
+            messagebox.showerror("Error", "No domain has been selected!\n\nMake sure that you select a correct domain name to take shots from.")
+            
+        if shot.returncode == 0:
+            outName = name + '.png'
+            convert = subprocess.run(['convert', scName, outName], capture_output=True)
+            if convert.returncode != 0:
+                print(f"Could not convert {scName} to {outName}.")   
+            delete = subprocess.run(['rm', '-f', scName], capture_output=True)
+            if delete.returncode != 0:
+                print(f"Could not delete {scName}.")   
+            path = os.path.join(os.path.abspath('.'), outName)
+            self.imageName = outName
+            self.imageCount = 0
+            self.displayImage(path)
+            
+        else:
+            messagebox.showerror("Error", f"The screen shot was not taken!\n{shot.stderr.decode('utf-8')}")
+        print(f"virsh screenshot {domain} {scName}")
+            
 
 #-----------------------------------------------------------------------------------------------
 
