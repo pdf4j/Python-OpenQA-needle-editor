@@ -14,6 +14,11 @@ you can load that instead and a correct image will load.
 * Tkinter
 * the Pillow library
 
+## Recommended requirements
+
+* Libvirt to run VMs that can be controllable with `virsh`
+* ImageMagick 
+
 ## Using the editor
 
 ### Starting the editor
@@ -43,13 +48,24 @@ You can also open a particular file and edit its needle. To use this approach:
 2. Use the dialogue to locate the file you want to edit.
 
 
-### Navigating through images
+#### Navigating through images
 
 You can navigate through the images back and forth in the loop. To navigate through the image loop:
 
 1. Click the **Next picture** or the **Previous picture** buttons.
 2. Use the **n** and **p** keys. 
 
+
+#### Taking screenshots from a VM
+
+If you have a VM running, you can load screenshots from that to get the `png` image for the needle.:
+
+1. Click on the **List domains** button to get a list of running VMs.
+2. Select the VM from that list.
+3. Name the file in the field (do not use any suffix) and click on the **Take screenshot** button.
+4. The image opens in the editor window and you can work with it as you would do normally.
+
+**Note:** To have this functionality, you have to have `libvirt`, `virsh`, and `ImageMagick` installed. If your installation requires `sudo` to work with VMs, you have to run the editor with `sudo`, too.
 
 ### Working with needles
 
