@@ -613,6 +613,7 @@ class Application:
             self.imageName = outName
             self.imageCount = 0
             self.displayImage(path)
+            self.textField.delete("1.0", "end")
             self.textField.insert("end", name)
             
         else:
