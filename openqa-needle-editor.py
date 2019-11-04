@@ -613,6 +613,7 @@ class Application:
             self.imageName = outName
             self.imageCount = 0
             self.displayImage(path)
+            self.textField.insert("end", name)
             
         else:
             messagebox.showerror("Error", f"The screen shot was not taken!\n{shot.stderr.decode('utf-8')}")
