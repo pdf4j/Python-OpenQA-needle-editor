@@ -9,6 +9,7 @@ Created on Fri May 18 08:46:48 2018
 import tkinter as tk
 import os
 import json
+import re
 import sys
 import subprocess
 from tkinter import filedialog, messagebox
@@ -76,12 +77,15 @@ class Application:
         
         self.deleteButton = tk.Button(self.buttonFrame, text="Remove area from needle (r)", command=lambda: self.removeAreaFromNeedle(None))
         self.deleteButton.grid(row=7, column=0, sticky="news")
+
+        self.renameButton = tk.Button(self.buttonFrame, text="Rename PNG file from tag (x)", command=lambda: self.renameFile(None))
+        self.renameButton.grid(row=8, column=0, sticky="news")
         
         self.loadButton = tk.Button(self.buttonFrame, text="Load needle (l)", command=lambda: self.loadNeedle(None))
-        self.loadButton.grid(row=8,  column=0, sticky="nesw")
+        self.loadButton.grid(row=9,  column=0, sticky="nesw")
         
         self.saveButton = tk.Button(self.buttonFrame, text="Create (save) needle (c)", command=lambda: self.createNeedle(None))
-        self.saveButton.grid(row=9,  column=0, sticky="nesw")
+        self.saveButton.grid(row=10,  column=0, sticky="nesw")
         
         self.picFrame = tk.Frame(self.frame)
         self.picFrame.grid(row=0, column=1)
@@ -112,8 +116,7 @@ class Application:
         self.pictureField.bind("<Down>", self.resizeArea)
         self.pictureField.bind("<Left>", self.resizeArea)
         self.pictureField.bind("<Right>", self.resizeArea)
-       # self.pictureField.bind("c", self.saveNeedle)
-        #self.pictureField.bind("m", lambda: self.modifyNeedle())
+        self.pictureField.bind("x", self.renameFile)
         
         self.xscroll.config(command=self.pictureField.xview)
         self.yscroll.config(command=self.pictureField.yview)
@@ -221,10 +224,6 @@ class Application:
 
         self.takeButton = tk.Button(self.screenshotFrame, text='Take screenshot', command=self.takeScreenshot)
         self.takeButton.grid(row=1, column=2, sticky="we")
-
-
-
-        
 
     def wrapopen(self, event): # These functions serve as wrappers for key bindings that were not able to invoke 
         self.selectfile()
@@ -565,6 +564,29 @@ class Application:
         self.pictureField.delete(self.rectangle)
         self.rectangle = None
 
+    def renameFile(self, arg):
+        """ Rename the needle PNG file with the top placed tag. """
+        tags = self.textField.get("1.0", "end-1c").split("\n")
+        future_name = tags[0]
+        if future_name and self.imageName:
+            future_name = f"{future_name}.png"
+            current = self.returnPath(self.imageName)
+            new = os.path.join(self.directory, future_name)
+            try:
+                os.rename(current, new)
+                self.imageName = future_name
+                self.nameEntry.config(state="normal")
+                self.nameEntry.delete(0, "end")
+                self.nameEntry.insert("end", future_name)
+                self.nameEntry.config(state="readonly")
+                messagebox.showinfo("Success", "The PNG file has been renamed.")
+            except Exception as e:
+                messagebox.showerror("Error", str(e))
+        elif not future_name:
+            messagebox.showerror("Error", "No tags available to rename the file. Leaving it unchanged.")
+        elif not self.imageName:
+            messagebox.showerror("Error", "No image loaded. Load an image first!")
+
     def getVmDomains(self):
         run = subprocess.run(['virsh', 'list'], capture_output=True)
         domains = []
@@ -575,7 +597,9 @@ class Application:
             doms = output[2:]
             for line in doms:
                 try:
-                    d = line.split('  ')[2].strip()
+                    d = re.split("\s+", line)
+                    d = d[2].strip()
+                    print(d)
                     domains.append(d)                    
                 except IndexError:
                     break
