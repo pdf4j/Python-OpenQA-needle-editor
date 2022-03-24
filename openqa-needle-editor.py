@@ -62,11 +62,15 @@ class Application:
         self.menu_file.add_separator()
         self.menu_file.add_command(label='Load next', accelerator='Ctrl-N', command=self.nextImage)
         self.menu_file.add_command(label='Load previous', accelerator='Ctrl-P', command=self.prevImage)
-        self.menu_file.add_command(label='Load needle', accelerator='Ctrl-L', command=self.loadNeedle)
-        self.menu_file.add_command(label='Save needle', accelerator='Ctrl-S', command=self.createNeedle)
         self.menu_file.add_command(label='Set name from tag', accelerator='Ctrl-X', command=self.renameFile)
         self.menu_file.add_separator()
         self.menu_file.add_command(label='Quit', accelerator='Ctrl-Q', command=self.wrapquit)
+        # Define the Needle submenu
+        self.menu_needle = tk.Menu(self.menu)
+        self.menu.add_cascade(menu=self.menu_needle, label='Needle')
+        self.menu_needle.add_command(label='Load needle', accelerator='Ctrl-L', command=self.loadNeedle)
+        self.menu_needle.add_command(label='Save needle', accelerator='Ctrl-S', command=self.createNeedle)
+
         # Define the Area submenu
         self.menu_area = tk.Menu(self.menu)
         self.menu.add_cascade(menu=self.menu_area, label='Area')
@@ -265,7 +269,6 @@ class Application:
 
     def displayImage(self, path):
         """Display image on the canvas."""
-        print(path)
         self.picture = Image.open(path)
         self.picsize = (self.picture.width,self.picture.height)
         self.image = tk.PhotoImage(file=path)
@@ -598,7 +601,6 @@ class Application:
                 try:
                     d = re.split("\s+", line)
                     d = d[2].strip()
-                    print(d)
                     domains.append(d)                    
                 except IndexError:
                     break
