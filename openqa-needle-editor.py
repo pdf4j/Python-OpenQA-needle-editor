@@ -68,8 +68,8 @@ class Application:
         # Define the Needle submenu
         self.menu_needle = tk.Menu(self.menu)
         self.menu.add_cascade(menu=self.menu_needle, label='Needle')
-        self.menu_needle.add_command(label='Load needle', accelerator='Ctrl-L', command=self.loadNeedle)
-        self.menu_needle.add_command(label='Save needle', accelerator='Ctrl-S', command=self.createNeedle)
+        self.menu_needle.add_command(label='Load', accelerator='Ctrl-L', command=self.loadNeedle)
+        self.menu_needle.add_command(label='Save', accelerator='Ctrl-S', command=self.createNeedle)
 
         # Define the Area submenu
         self.menu_area = tk.Menu(self.menu)
