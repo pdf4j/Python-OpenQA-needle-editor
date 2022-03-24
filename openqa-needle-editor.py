@@ -76,7 +76,7 @@ class Application:
         self.menu.add_cascade(menu=self.menu_area, label='Area')
         self.menu_area.add_command(label='Add area', accelerator='Ctrl-A', command=self.addAreaToNeedle)
         self.menu_area.add_command(label='Remove area', accelerator='Ctrl-R', command=self.removeAreaFromNeedle)
-        self.menu_area.add_command(label='Show area', accelerator='Ctrl-G', command=self.showArea)
+        self.menu_area.add_command(label='Go to next area', accelerator='Ctrl-G', command=self.showArea)
         self.menu_area.add_command(label='Modify area', accelerator='Ctrl-M', command=self.modifyArea)
         # Define the VM submenu
         self.menu_vm = tk.Menu(self.menu)
