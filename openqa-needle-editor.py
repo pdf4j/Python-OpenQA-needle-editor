@@ -12,13 +12,33 @@ import json
 import re
 import sys
 import subprocess
+from tkinter import ttk
 from tkinter import filedialog, messagebox
 from PIL import Image
 
 class Application:
     """ Hold the GUI frames and widgets, as well as the handling in the GUI. """
-    def __init__(self, master):
-        self.frame = tk.Frame(master)
+    def __init__(self):
+        self.toplevel = tk.Tk()
+        self.toplevel.title("Python Needle Editor for openQA (version 2.5)")
+        self.create_menu()
+        # Map keys to the application
+        self.toplevel.bind("<Control-d>", self.readimages)
+        self.toplevel.bind("<Control-m>", self.modifyArea)
+        self.toplevel.bind("<Control-g>", self.showArea)
+        self.toplevel.bind("<Control-n>", self.nextImage)
+        self.toplevel.bind("<Control-a>", self.addAreaToNeedle)
+        self.toplevel.bind("<Control-r>", self.removeAreaFromNeedle)
+        self.toplevel.bind("<Control-p>", self.prevImage)
+        self.toplevel.bind("<Control-l>", self.loadNeedle)
+        self.toplevel.bind("<Control-s>", self.createNeedle)
+        self.toplevel.bind("<Control-o>", self.selectfile)
+        self.toplevel.bind("<Control-q>", self.wrapquit)
+        self.toplevel.bind("<Control-x>", self.renameFile)
+        self.toplevel.bind("<Control-v>", self.show_connect_VM)
+        self.toplevel.bind("<Control-t>", self.takeScreenshot)
+        # Initiate the main frame of the application.
+        self.frame = tk.Frame(self.toplevel)
         self.frame.grid()
         self.buildWidgets()
         self.images = [] # List of images to be handled.
@@ -30,6 +50,41 @@ class Application:
         self.handler = None # The file reader and writer object
         self.imageCount = 0 # Counter for
         self.rectangles = [] # Holder for rectangles
+        self.virtual_machine = None # Holds the name of the connected virtual machine
+
+    def create_menu(self):
+        self.menu = tk.Menu(self.toplevel)
+        # Define the File submenu
+        self.menu_file = tk.Menu(self.menu)
+        self.menu.add_cascade(menu=self.menu_file, label='File')
+        self.menu_file.add_command(label='Open file', accelerator='Ctrl-O', command=self.selectfile)
+        self.menu_file.add_command(label='Open directory', accelerator='Ctrl-D', command=self.readimages)
+        self.menu_file.add_separator()
+        self.menu_file.add_command(label='Load next', accelerator='Ctrl-N', command=self.nextImage)
+        self.menu_file.add_command(label='Load previous', accelerator='Ctrl-P', command=self.prevImage)
+        self.menu_file.add_command(label='Load needle', accelerator='Ctrl-L', command=self.loadNeedle)
+        self.menu_file.add_command(label='Save needle', accelerator='Ctrl-S', command=self.createNeedle)
+        self.menu_file.add_command(label='Set name from tag', accelerator='Ctrl-X', command=self.renameFile)
+        self.menu_file.add_separator()
+        self.menu_file.add_command(label='Quit', accelerator='Ctrl-Q', command=self.wrapquit)
+        # Define the Area submenu
+        self.menu_area = tk.Menu(self.menu)
+        self.menu.add_cascade(menu=self.menu_area, label='Area')
+        self.menu_area.add_command(label='Add area', accelerator='Ctrl-A', command=self.addAreaToNeedle)
+        self.menu_area.add_command(label='Remove area', accelerator='Ctrl-R', command=self.removeAreaFromNeedle)
+        self.menu_area.add_command(label='Show area', accelerator='Ctrl-G', command=self.showArea)
+        self.menu_area.add_command(label='Modify area', accelerator='Ctrl-M', command=self.modifyArea)
+        # Define the VM submenu
+        self.menu_vm = tk.Menu(self.menu)
+        self.menu.add_cascade(menu=self.menu_vm, label='vMachine')
+        self.menu_vm.add_command(label='Connect VM', accelerator='Ctrl-V', command=self.show_connect_VM)
+        self.menu_vm.add_command(label='Take screenshot', accelerator='Ctrl-T', command=self.takeScreenshot)
+        # Register the menu in the top level widget.
+        self.toplevel['menu'] = self.menu
+
+    def run(self):
+        """ Starts the mainloop of the application. """
+        self.toplevel.mainloop()
 
     def acceptCliChoice(self, path):
         """Opens an image for editing when passed as a CLI argument upon starting the editor."""
@@ -45,50 +100,9 @@ class Application:
         
     def buildWidgets(self):
         """Construct GUI"""
-        self.buttonFrame = tk.Frame(self.frame)
-        self.buttonFrame.grid(row=0, column=0, rowspan=2, sticky="news")
-
-        self.openDirButton = tk.Button(self.buttonFrame, text="Select image directory", width=15, command=self.readimages)
-        self.openDirButton.grid(row=0, column=0, sticky="nesw")
-        
-        self.openFileButton = tk.Button(self.buttonFrame, text="Select image file (o)", width=15, command=self.selectfile)
-        self.openFileButton.grid(row=1, column=0, sticky="nesw")
-
-        self.quitButton = tk.Button(self.buttonFrame, text="Quit (q)", fg="red", command=self.frame.quit)
-        self.quitButton.grid(row=12, column=0, sticky="nesw")
-        
-        self.nextButton = tk.Button(self.buttonFrame, text="Next image (n)", command=lambda: self.nextImage(None))
-        self.nextButton.grid(row=2,  column=0, sticky="nesw")
-        
-        self.prevButton = tk.Button(self.buttonFrame, text="Previous image (p)", command=lambda: self.prevImage(None))
-        self.prevButton.grid(row=3,  column=0, sticky="nesw")
-        
-        self.createButton = tk.Button(self.buttonFrame, text="Show next area (s)", command=lambda: self.showArea(None))
-        self.createButton.grid(row=4,  column=0, sticky="nesw")
-        
-        self.modifyButton = tk.Button(self.buttonFrame, text="Modify active area (m)", command=lambda: self.modifyArea(None))
-        self.modifyButton.grid(row=5, column=0, sticky="nesw")
-        
-        #self.hideButton = tk.Button(self.buttonFrame, text="Delete active area (d)", command=lambda: self.hideArea(None))
-        #self.hideButton.grid(row=5, column=0, sticky="news")
-        
-        self.addButton = tk.Button(self.buttonFrame, text="Add area to needle (a)", command=lambda: self.addAreaToNeedle(None))
-        self.addButton.grid(row=6, column=0, sticky="news")
-        
-        self.deleteButton = tk.Button(self.buttonFrame, text="Remove area from needle (r)", command=lambda: self.removeAreaFromNeedle(None))
-        self.deleteButton.grid(row=7, column=0, sticky="news")
-
-        self.renameButton = tk.Button(self.buttonFrame, text="Rename PNG file from tag (x)", command=lambda: self.renameFile(None))
-        self.renameButton.grid(row=8, column=0, sticky="news")
-        
-        self.loadButton = tk.Button(self.buttonFrame, text="Load needle (l)", command=lambda: self.loadNeedle(None))
-        self.loadButton.grid(row=9,  column=0, sticky="nesw")
-        
-        self.saveButton = tk.Button(self.buttonFrame, text="Create (save) needle (c)", command=lambda: self.createNeedle(None))
-        self.saveButton.grid(row=10,  column=0, sticky="nesw")
         
         self.picFrame = tk.Frame(self.frame)
-        self.picFrame.grid(row=0, column=1)
+        self.picFrame.grid(row=0, column=0)
                 
         self.xscroll = tk.Scrollbar(self.picFrame, orient='horizontal')
         self.xscroll.grid(row=1, column=0, sticky="we")
@@ -99,34 +113,21 @@ class Application:
         self.pictureField = tk.Canvas(self.picFrame, height=800, width=1200, xscrollcommand=self.xscroll.set, yscrollcommand=self.yscroll.set)
         self.pictureField.grid(row=0, column=0)
         self.pictureField.config(scrollregion=self.pictureField.bbox('ALL'))
+        # Bind picture specific keys
         self.pictureField.bind("<Button 1>", self.startArea)
         self.pictureField.bind("<B1-Motion>", self.redrawArea)
         self.pictureField.bind("<ButtonRelease-1>", self.endArea)
-        self.pictureField.bind("m", self.modifyArea)
-        self.pictureField.bind("s", self.showArea)
-        self.pictureField.bind("n", self.nextImage)
-        self.pictureField.bind("a", self.addAreaToNeedle)
-        self.pictureField.bind("r", self.removeAreaFromNeedle)
-        self.pictureField.bind("p", self.prevImage)
-        self.pictureField.bind("l", self.loadNeedle)
-        self.pictureField.bind("c", self.createNeedle)
-        self.pictureField.bind("o", self.wrapopen)
-        self.pictureField.bind("q", self.wrapquit)
         self.pictureField.bind("<Up>", self.resizeArea)
         self.pictureField.bind("<Down>", self.resizeArea)
         self.pictureField.bind("<Left>", self.resizeArea)
         self.pictureField.bind("<Right>", self.resizeArea)
-        self.pictureField.bind("x", self.renameFile)
         
         self.xscroll.config(command=self.pictureField.xview)
         self.yscroll.config(command=self.pictureField.yview)
         
-        self.jsonFrame = tk.Frame(self.frame)
+        self.jsonFrame = tk.Frame(self.frame, padx=10)
         self.jsonFrame.grid(row=0, column=2, sticky="news")
 
-        self.screenshotFrame = tk.Frame(self.frame)
-        self.screenshotFrame.grid(row=1, column=2, sticky="news")
-        
         self.nameLabel = tk.Label(self.jsonFrame, text="Filename:")
         self.nameLabel.grid(row=0, column=0, sticky="w")
         
@@ -136,7 +137,7 @@ class Application:
         self.propLabel = tk.Label(self.jsonFrame, text="Properties:")
         self.propLabel.grid(row=2, column=0, sticky="w")
         
-        self.propText = tk.Text(self.jsonFrame, width=50, height=5)
+        self.propText = tk.Text(self.jsonFrame, width=30, height=4)
         self.propText.grid(row=3, column=0, sticky="ew")
 
         self.needleUL = tk.Label(self.jsonFrame, text="Area Coordinates:")
@@ -190,52 +191,40 @@ class Application:
         self.textLabel = tk.Label(self.jsonFrame, text="Tags:")
         self.textLabel.grid(row=8, column=0, sticky="w")
         
-        self.textField = tk.Text(self.jsonFrame, width=50, height=8)
+        self.textField = tk.Text(self.jsonFrame, width=30, height=5)
         self.textField.grid(row=9, column=0, sticky="ew")
         
         self.jsonLabel = tk.Label(self.jsonFrame, text="Json Data:")
         self.jsonLabel.grid(row=10, column=0, sticky="w")
         
-        self.textJson = tk.Text(self.jsonFrame, width=50, height=8)
+        self.textJson = tk.Text(self.jsonFrame, width=30, height=10)
         self.textJson.grid(row=11, column=0, sticky="ew")
 
         self.needleLabel = tk.Label(self.jsonFrame, text="Areas in needle: ")
         self.needleLabel.grid(row=12, column=0, sticky="w")
 
-        self.needleEntry = tk.Entry(self.jsonFrame, width=50)
+        self.needleEntry = tk.Entry(self.jsonFrame, width=30)
         self.needleEntry.grid(row=13, column=0, sticky="w")
 
-        self.scrNameLabel = tk.Label(self.screenshotFrame, text="VM domain: ")
-        self.scrNameLabel.grid(row=0, column=0, sticky="w")
+        self.vmLabel = tk.Label(self.jsonFrame, text="VM connection:")
+        self.vmLabel.grid(row=14, column=0, sticky="w")
+        
+        self.vmEntry = tk.Entry(self.jsonFrame, width=30)
+        self.vmEntry.grid(row=15, column=0, sticky="w")
+        self.vmEntry.insert("end","Not connected")
 
-        self.scrName = tk.Listbox(self.screenshotFrame, width=30, height=2)
-        self.scrName.grid(row=0, column=1, sticky="we")
-        for i in ['Not available']:
-            self.scrName.insert("end", i)
 
-        self.vmButton = tk.Button(self.screenshotFrame, text='List domains', command=self.getVmDomains)
-        self.vmButton.grid(row=0, column=2, sticky="we")
-
-        self.shotNameLabel = tk.Label(self.screenshotFrame, text="Screenshot name: ")
-        self.shotNameLabel.grid(row=1, column=0, sticky="w")
-
-        self.shotName = tk.Entry(self.screenshotFrame, width=30)
-        self.shotName.grid(row=1, column=1, sticky="w")
-
-        self.takeButton = tk.Button(self.screenshotFrame, text='Take screenshot', command=self.takeScreenshot)
-        self.takeButton.grid(row=1, column=2, sticky="we")
-
-    def wrapopen(self, event): # These functions serve as wrappers for key bindings that were not able to invoke 
+    def wrapopen(self): # These functions serve as wrappers for key bindings that were not able to invoke 
         self.selectfile()
 
-    def wrapquit(self, event):
+    def wrapquit(self, event=None):
         self.frame.quit()
 
     def returnPath(self, image):
         """Create a full path from working directory and image name."""
         return os.path.join(self.directory, image)
     
-    def readimages(self):
+    def readimages(self, event=None):
         """Read png images from the given directory and create a list of their names."""
         self.images = []
         self.directory = filedialog.askdirectory()
@@ -256,7 +245,7 @@ class Application:
         except IndexError:
             pass
 
-    def selectfile(self):
+    def selectfile(self, event=None):
         """Reads in an image file and shows it for editing."""
         noimage = False
         try:
@@ -273,8 +262,6 @@ class Application:
             self.imageCount = 0
             path = os.path.join(self.directory, image)
             self.displayImage(path)
-        else:
-            pass
 
     def displayImage(self, path):
         """Display image on the canvas."""
@@ -289,7 +276,7 @@ class Application:
         self.nameEntry.config(state="readonly")
         self.pictureField.focus_set()
                
-    def nextImage(self, arg):
+    def nextImage(self, event=None):
         """Display next image on the list."""
         self.imageCount += 1
         try:
@@ -307,10 +294,8 @@ class Application:
             self.pictureField.delete(self.rectangle)
             self.rectangle = None
             self.displayImage(self.returnPath(self.imageName))
-        else:
-            pass
 
-    def prevImage(self, arg):
+    def prevImage(self, event=None):
         """Display previous image on the list."""
         self.imageCount -= 1
         try:
@@ -354,7 +339,7 @@ class Application:
         heigth = int(coordinates[3]) - int(coordinates[1])
         return [width, heigth]
             
-    def showArea(self, arg):
+    def showArea(self, event=None):
         """Load area and draw a rectangle around it."""
         #self.getCoordinates()
         self.area = self.needle.provideNextArea()
@@ -387,7 +372,7 @@ class Application:
         self.heigthEntry.delete(0, "end")
         self.heigthEntry.insert("end", size[1])
         
-    def modifyArea(self, arg):
+    def modifyArea(self, event=None):
         """Update the information for the active needle area, including properties, tags, etc."""
         self.getCoordinates()
         xpos = self.needleCoordinates[0]
@@ -412,7 +397,7 @@ class Application:
         self.textJson.insert("end", json)
         self.pictureField.coords(self.rectangle, self.needleCoordinates)
         
-    def addAreaToNeedle(self, arg):
+    def addAreaToNeedle(self, event=None):
         """Add new area to needle. The needle can have more areas."""
         self.needle.addArea()
         self.modifyArea(None)
@@ -421,7 +406,7 @@ class Application:
         self.needleEntry.insert("end", areas)
 
 
-    def removeAreaFromNeedle(self, arg):
+    def removeAreaFromNeedle(self, event=None):
         """Remove the active area from the needle (deletes it)."""
         self.needle.removeArea()
         areas = self.needle.provideAreaCount()
@@ -524,7 +509,7 @@ class Application:
         
 
         
-    def loadNeedle(self, arg):
+    def loadNeedle(self, event=None):
         """Load the existing needle information from the file and display them in the window."""
         if self.imageName != None:
             jsonfile = self.returnPath(self.imageName).replace(".png", ".json")
@@ -552,7 +537,7 @@ class Application:
         else:
             messagebox.showerror("Error", "No images are loaded. Select image directory first.")
 
-    def createNeedle(self, arg):
+    def createNeedle(self, event=None):
         """Write out the json file for the actual image to store the needle permanently."""
         jsondata = self.needle.provideJson()
         filename = self.nameEntry.get().replace(".png", ".json")
@@ -564,7 +549,7 @@ class Application:
         self.pictureField.delete(self.rectangle)
         self.rectangle = None
 
-    def renameFile(self, arg):
+    def renameFile(self, event=None):
         """ Rename the needle PNG file with the top placed tag. """
         tags = self.textField.get("1.0", "end-1c").split("\n")
         future_name = tags[0]
@@ -587,11 +572,25 @@ class Application:
         elif not self.imageName:
             messagebox.showerror("Error", "No image loaded. Load an image first!")
 
-    def getVmDomains(self):
+    def show_connect_VM(self, event=None):
+        """ Show a dialogue to connect to a VM """
+        # Create the basic GUI for the dialogue
+        self.connect_dialogue = tk.Toplevel(self.toplevel)
+        self.connect_dialogue.title('Connect to a VM')
+        self.cd_layout = tk.Frame(self.connect_dialogue)
+        self.cd_layout.grid()
+        self.cd_label = tk.Label(self.cd_layout, text='Choose a VM:', padx=10, pady=5)
+        self.cd_label.grid(row=0, column=0)
+        self.connect_dialogue.bind("<Return>", self.connect)
+
+        # Get the domain names from the external application (virsh)
         run = subprocess.run(['virsh', 'list'], capture_output=True)
         domains = []
+        # If the virsh command fails, tell us about it.
         if run.returncode != 0:
             messagebox.showerror("Error", run.stderr.decode('utf-8'))
+        # Otherwise, handle the command output to get a list of
+        # running and available virtual machines.
         else:
             output = run.stdout.decode('utf-8').split('\n')
             doms = output[2:]
@@ -603,46 +602,54 @@ class Application:
                     domains.append(d)                    
                 except IndexError:
                     break
-        self.scrName.delete(0, "end")
-        if len(domains) != 0:
-            for d in domains:
-                self.scrName.insert("end", d)
-        else:
-            messagebox.showerror("Error", "No active domains found!\n\nStart a VM or run the editor with sudo.")
+        if len(domains) == 0:
+            messagebox.showerror("No domains found", "If there is a running VM, it may not be running in the user profile. Either run in the user profile or run the application with correct privileges.")
+        # Put the domain names into the Combobox widget to allow to select one of them.
+        choices = tk.StringVar()
+        self.cd_choose_box = ttk.Combobox(self.cd_layout, textvariable=choices, height=3)
+        self.cd_choose_box.grid(row=0, column=1)
+        self.cd_connect = tk.Button(self.cd_layout, text="Connect", width=10, command=self.connect)
+        self.cd_connect.grid(row=1, column=1)
+        self.cd_choose_box['values'] = domains
 
-    def takeScreenshot(self):
-        selected = self.scrName.curselection()
-        try:
-            domain = self.scrName.get(selected[0])
-        except IndexError:
-            messagebox.showerror("Error", "No active domains found!\n\nStart a VM or run the editor with sudo.")
-        name = self.shotName.get()
-        scName =  name + '.ppm'
-        if not scName:
-            scName = "screenshot.ppm"
-        try:
-            shot = subprocess.run(['virsh', 'screenshot', domain, scName], capture_output=True)
-        except UnboundLocalError:
-            messagebox.showerror("Error", "No domain has been selected!\n\nMake sure that you select a correct domain name to take shots from.")
-            
-        if shot.returncode == 0:
-            outName = name + '.png'
-            convert = subprocess.run(['convert', scName, outName], capture_output=True)
-            if convert.returncode != 0:
-                print(f"Could not convert {scName} to {outName}.")   
-            delete = subprocess.run(['rm', '-f', scName], capture_output=True)
-            if delete.returncode != 0:
-                print(f"Could not delete {scName}.")   
-            path = os.path.join(os.path.abspath('.'), outName)
-            self.imageName = outName
-            self.imageCount = 0
-            self.displayImage(path)
-            self.textField.delete("1.0", "end")
-            self.textField.insert("end", name)
-            
+    def connect(self, event=None):
+        """ Update the status variable to let the application know about the VM. """
+        selected = self.cd_choose_box.get()
+        if not selected:
+            messagebox.showerror("No VM selected", "Please, select one of the available VMs.")
+        self.virtual_machine = selected
+        self.connect_dialogue.destroy()
+        self.vmEntry.delete("0", "end")
+        self.vmEntry.insert("end", self.virtual_machine)
+
+        
+    def takeScreenshot(self, event=None):
+        """ Take the screenshot from the running virtual machine. As only .ppm files
+        are possible, use imagemagick to convert the shot into a .png file and save
+        it. """
+        # When no VM is available for taking shots (the VM is not connected)
+        if not self.virtual_machine:
+            messagebox.showerror("No VM connected", "Connect a VM before you try taking screenshots from it. Use the CTRL-V key shortcut.")
+        # Else do take the shot.
         else:
-            messagebox.showerror("Error", f"The screen shot was not taken!\n{shot.stderr.decode('utf-8')}")
-        print(f"virsh screenshot {domain} {scName}")
+            domain = self.virtual_machine
+            shot = subprocess.run(['virsh', 'screenshot', domain, 'screenshot.ppm'], capture_output=True)
+            if shot.returncode == 0:
+                convert = subprocess.run(['convert', 'screenshot.ppm', 'screenshot.png'], capture_output=True)
+                if convert.returncode != 0:
+                    messagebox.showerror("Conversion failed", f"Could not convert the ppm file into the target format.")   
+                delete = subprocess.run(['rm', '-f', 'screenshot.ppm'], capture_output=True)
+                if delete.returncode != 0:
+                    messagebox.showerror("Deletion failed", "Could not delete the temporary file.")   
+                path = os.path.join(os.path.abspath('.'), 'screenshot.png')
+                self.imageName = 'screenshot.png'
+                self.imageCount = 0
+                self.displayImage(path)
+                self.textField.delete("1.0", "end")
+                self.textField.insert("end", self.imageName)
+            
+            else:
+                messagebox.showerror("Error", f"The screen shot was not taken!\n{shot.stderr.decode('utf-8')}")
             
 
 #-----------------------------------------------------------------------------------------------
@@ -760,19 +767,18 @@ class needleData:
 
 #-----------------------------------------------------------------------------------------------
 
-root = tk.Tk()
-root.title("Python Needle Editor for OpenQA (Version 2)")
+#root = tk.Tk()
+#root.title("Python Needle Editor for OpenQA (Version 2)")
 
 try:
     path = sys.argv[1]
 except IndexError:
     path = None
     
-app = Application(root)
+app = Application()
 
 if path != None:
     app.acceptCliChoice(path)
 
-root.mainloop()
-root.destroy() # optional; see description below
+app.run()
 
