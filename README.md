@@ -1,11 +1,12 @@
-# Python Needle Editor for creating OpenQA needles (Version 2.5)
+# Needly (Version 2.5)
 
-The *Python Needle Editor* creates or modifies needles for the OpenQA tests. The OpenQA needle consists of two files, a *png* screenshot and the *json* definition file. The editor enables its users to draw the areas to check above the screenshot, define the meta data, and create the definition file based on the meta data. The definition file is fully compatible with the OpenQA engine. 
+*Needly* is an openQA needle editor written in Python. It creates or modifies needles for the openQA tests. 
 
-The advantage of the editor is that it does not need OpenQA to be installed on the system. The needle files are all you need to work with them.
+The openQA needle consists of two files, a *png* screenshot and the *json* definition file. The definition file provides various information to the openQA engine, including the *tags*, *types*, and *areas* to look for. Users can use this application to edit (or create) all the necessary information quickly and draw the areas using the built-in WYSIWYG editor. When the needle is saved, it is fully compatible with the openQA engine. 
+
+The advantage of the editor is that it does not need openQA to be installed on the system. The needle files are all you need to work with them.
 
 The editor only supports *png* screenshots. To open the needle, you can either load that *png* file or the *json* definition file. Both ways will open the needle in the editor. 
-
 
 ## Requirements to run the application
 
@@ -24,8 +25,8 @@ The editor only supports *png* screenshots. To open the needle, you can either l
 
 Currently, you can run the editor from the console.
 
-* Running `./openqa-needle-editor.py` starts the editor without any image loaded. You can open an image using the **Ctrl-O** combination. Or you can load the entire directory into a front using **Ctrl-D**. 
-* Running `./openqa-needle-editor.py needle.png` starts the editor with that particular image loaded which can be useful to edit an existing needle quickly.
+* Running `./needly.py` starts the editor without any image loaded. You can open an image using the **Ctrl-O** combination. Or you can load the entire directory into a front using **Ctrl-D**. 
+* Running `./needly.py needle.png` starts the editor with that particular image loaded which can be useful to edit an existing needle quickly.
 
 ### Reading the images
 
@@ -36,7 +37,6 @@ You can open an entire directory and navigate through images one after another a
 1. Click **File > Open directory** or use **Ctrl-D**.
 2. Use the dialogue to select a directory from which the screenshots will be loaded.
 3. Circle over the images using **Load next** (**Ctrl-N**) or **Load previous** (**Ctrl-P**) from the **File** menu.
-
 
 #### Editing a single file
 
@@ -66,6 +66,7 @@ Among others:
 * the content of the needle json file
 
 #### Updating the needle information
+
 You can manually update the following fields:
 
 * the coordinates
@@ -73,7 +74,7 @@ You can manually update the following fields:
 * the tags
 * the area type
 
-#### Redrawing the area 
+#### Redrawing the area
 
 The needle area can be updated using several techniqes:
 
@@ -82,7 +83,7 @@ The needle area can be updated using several techniqes:
 3. You can use keys to change the size of the area. 
 
 When using the keyboard:
-	
+
 * Using **Left**, **Right**, **Up**, and **Down** arrows changes the coordinates of the lower right corner in steps of 1 px each.
 * Using the **Shift** key combined with arrows changes the coordinates of the upper left corner in steps of 1 px each.
 * Holding the **Ctrl** key when pressing arrows increases one step to 5 pxs.
@@ -90,7 +91,6 @@ When using the keyboard:
 
 **Note**: When you have updated the area, you have to click **Area > Modify area** (**Ctrl-M**) 
 to update the actual needle. 
-
 
 #### Saving a needle
 
@@ -106,10 +106,10 @@ When you create a needle can do it for an existing image or you can take a scree
 
 1. Open the existing image.
 2. Fill in all needed info:
-    * needle tag
-    * needle area
-    * needle type (match, ocr, or exclude)
-    * needle properties (not compulsory)
+   * needle tag
+   * needle area
+   * needle type (match, ocr, or exclude)
+   * needle properties (not compulsory)
 3. Draw a rectangle around the area or use any of the approaches from **Redrawing the area** section.
 4. Click **Area > Add area** button or press the **Ctrl-A**  to add the area to the needle. 
 5. If you wish to add another area (the needle can have more areas), just draw a new area and repeat **Step 3** to add it to the needle.
@@ -160,11 +160,9 @@ If you need to change the first area without removing the next area, use the fol
 5. Repeat until you have modified required areas.
 6. Save the needle (**Ctrl-S**).
 
-
 #### Taking screenshots from a VM
 
 If you do not have any screenshot to be used as a needle, you can create one by taking a screenshot from an existing and running virtual machine:
-
 
 1. Click on the **vMachine > Connect a VM** to open a dialogue to connect to a running VM. Now, the application will be able to take screenshots from that virtual machine. When you need to connect to a different VM, repeate this step.
 2. When the application is connected to a VM (indicated in the lower right part), you can take a screenshot any time using **vMachine > Take screenshot** (**Ctrl-T**). The screenshot will be saved as `screenshot.png` and displayed in the application.
@@ -181,7 +179,3 @@ If you do not have any screenshot to be used as a needle, you can create one by 
 ## Reporting a problem
 
 If you experience a problem, open an issue. Or help with the development. Yup, it is opensource!
-
-
-
-
