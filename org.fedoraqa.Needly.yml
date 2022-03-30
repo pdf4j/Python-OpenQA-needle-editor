@@ -1,12 +1,30 @@
-app-id: org.flatpak.Needly
+# The YAML manifest for the Needle Flatpak
+#
+app-id: org.fedoraqa.Needly
 runtime: org.freedesktop.Platform
 runtime-version: '21.08'
 sdk: org.freedesktop.Sdk
-command: needly.py
+command: needly
+finish-args: 
+   - --share=ipc # For X11
+   - --socket=wayland # Enable communication with Wayland
+   - --socket=x11 # Alternatively, with X11
+   - --device=kvm # Allow access to a KVM device
+   - --filesystem=home # Allow read-write access to home dir
+   - --filesystem=host # Allow read-write access to host dir tree
+   - --filesystem=xdg-run/gvfs # Access gvfs mounts
+   - --filesystem=xdg-run/libvirt # Access to qemu:///session
+   - --filesystem=/run/libvirt # Access to qemu:///system
+
+
+# Installing the application and the dependencies
+#
 modules:
-
+  # This will install the Tkinter support for Python as
+  # Tkinter is not part of the runtime.
   - python3-tkinter.yaml
-
+  # This installs the Pillow library needed to work with images.
+  # It uses PIP.
   - name: pillow
     buildsystem: simple
     build-commands:
@@ -16,6 +34,7 @@ modules:
         url: https://files.pythonhosted.org/packages/03/a3/f61a9a7ff7969cdef2a6e0383a346eb327495d20d25a2de5a088dbb543a6/Pillow-9.0.1.tar.gz
         sha256: 6c8bc8238a7dfdaf7a75f5ec5a663f4173f8c367e5a39f87e720495e1eed75fa
 
+  # This is a dependency for libvirt.
   - name: libtirpc
     config-opts:
       - --disable-gssapi
@@ -25,6 +44,8 @@ modules:
         url: https://downloads.sourceforge.net/sourceforge/libtirpc/libtirpc-1.3.2.tar.bz2
         sha256: e24eb88b8ce7db3b7ca6eb80115dd1284abc5ec32a8deccfed2224fc2532b9fd
 
+  # This is another dependency for libvirt which is used to
+  # create the necessary documentation.
   - name: docutils
     buildsystem: simple
     build-commands: 
@@ -34,6 +55,7 @@ modules:
         url: https://files.pythonhosted.org/packages/81/44/8a15e45ffa96e6cf82956dd8d7af9e666357e16b0d93b253903475ee947f/docutils-0.16-py2.py3-none-any.whl
         sha256: 0c5b78adfbf7762415433f5515cd5c9e762339e23369dbe8000d84a4bf4ab3af
 
+  # Another libvirt dependency
   - name: rpcsvc-proto
     buildsystem: autotools
     sources:
@@ -41,6 +63,7 @@ modules:
       url: https://github.com/thkukuk/rpcsvc-proto/archive/v1.4.1.tar.gz
       sha256: 750f7e57b81407a25b707867e90d7ee80aeb53bf515b114fc218f3c78dc9a6e8
 
+  # Libvirt
   - name: libvirt
     buildsystem: meson
     build-options:
@@ -52,6 +75,7 @@ modules:
       url: https://libvirt.org/sources/libvirt-8.0.0.tar.xz
       sha256: 51e6e8ff04bafe96d7e314b213dcd41fb1163d9b4f0f75cdab01e663728f4cf6
 
+  # Python Libvirt API
   - name: libvirt-python
     buildsystem: simple
     build-commands: 
@@ -61,22 +85,29 @@ modules:
         url: https://files.pythonhosted.org/packages/2a/74/919462bed158ccc2a8061f31d82c157740c2e597ff50490526336e8aa688/libvirt-python-8.1.0.tar.gz
         sha256: a21ecfab6d29ac1bdd1bfd4aa3ef58447f9f70919aefecd03774613f65914e43
 
-
+  # The Needly application
   - name: needly
     buildsystem: simple
+    build-options:
+      build-args:
+        - --share=network
     build-commands:
-      - install -D needly.py /app/bin/needly.py
+      - pip3 install --prefix=/app needly-2.5.5.tar.gz
+      - mkdir -pv /app/share/applications/
+      - cp -v *.desktop /app/share/applications
+      - mkdir -pv /app/share/icons/hicolor/128x128/apps
+      - cp -v *.png /app/share/icons/hicolor/128x128/apps
+      - mkdir -pv /app/share/appdata
+      - cp -v *.appdata.xml /app/share/appdata
     sources:
       - type: file
-        path: needly.py
+        url: https://files.pythonhosted.org/packages/c7/55/ea3bf8d7ee3bedf68647a379495806a7f1d18329969e9c31abe711c70ee2/needly-2.5.5.tar.gz
+        sha256: 39cc702db74878dbf310ed79e4c932ead417308ed30fb9c167c720e874a7eb92
+      - type: file
+        path: bundle/org.fedoraqa.Needly.png
+      - type: file
+        path: bundle/org.fedoraqa.Needly.appdata.xml
+      - type: file
+        path: bundle/org.fedoraqa.Needly.desktop
 
-finish-args: 
-   - --share=ipc
-   - --socket=wayland
-   - --socket=x11
-   - --device=kvm
-   - --filesystem=home
-   - --filesystem=host
-   - --filesystem=xdg-run/gvfs
-   - --filesystem=xdg-run/libvirt
-   - --filesystem=/run/libvirt
+
